@@ -10,3 +10,9 @@ data/logs/
 .streamlit/
 backup_*/
 .DS_Store
+# Data & Indexes
+memory.db
+vector_index/
+*.db
+*.faiss
+*.pkl

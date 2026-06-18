@@ -1,4 +1,3 @@
-import pytest
 from src.core.orchestrator import SecurityOrchestrator
 
 def test_orchestrator_init():
@@ -6,7 +5,7 @@ def test_orchestrator_init():
     assert orch is not None
 
 def test_threat_agent():
-    orch = SecurityOrchestrator()
+    orch = SecurityOrchestrator()  
     result = orch.process("Detected ransomware attack")
     assert result["status"] == "success"
     assert result["agent"] == "threat"

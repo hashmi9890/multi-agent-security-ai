@@ -12,7 +12,7 @@ Advanced security analysis platform with specialized AI agents for threat detect
 
 ## 📁 Structure
 
-```
+```text
 multi_agent_security_ai/
 ├── src/
 │   ├── core/          # Orchestrator, memory, router, prompts
@@ -45,7 +45,7 @@ streamlit run src/ui/streamlit_app.py
 ## 🤖 Agents
 
 | Agent | Purpose |
-|-------|---------|
+| ------- | --------- |
 | ThreatAnalyzer | Detect malware, attacks, IOCs |
 | VulnScanner | Identify CVEs, weaknesses |
 | LogParser | Parse logs, detect anomalies |
@@ -53,11 +53,11 @@ streamlit run src/ui/streamlit_app.py
 
 ## 📝 Usage Examples
 
-```
-"Analyze this log for suspicious activity: [paste log]"
-"Check for CVE-2024-0001 vulnerability"
-"Detected ransomware attack, what should I do?"
-"Failed login attempts from IP 192.168.1.100"
+```text
+Analyze this log for suspicious activity: [paste log]
+Check for CVE-2024-0001 vulnerability
+Detected ransomware attack, what should I do?
+Failed login attempts from IP 192.168.1.100
 ```
 
 ## 🔒 Security Note

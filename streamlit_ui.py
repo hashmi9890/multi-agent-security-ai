@@ -1,53 +1,72 @@
 import streamlit as st
-import os
-from dotenv import load_dotenv
-from src.orchestrator import Orchestrator
+from orchestrator import Orchestrator
+import json
 
-load_dotenv()
+st.set_page_config(
+    page_title="🚀 AI Agent System",
+    page_icon="🤖",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-st.set_page_config(page_title="🤖 AI Agent System", page_icon="🚀", layout="wide")
-
-st.title("🚀 AI Agent System")
-st.caption("Clean Architecture • Python 3.11 • Streamlit 1.58 • Multi-Agent + Security")
-
-with st.sidebar:
-    st.header("⚙️ Settings")
-    api_key = st.text_input("LLM API Key", value=os.getenv("LLM_API_KEY", ""), type="password")
-    if api_key:
-        st.success("✅ API Key Set")
-        os.environ["LLM_API_KEY"] = api_key
-    else:
-        st.warning("⚠️ Add API Key in .env file")
-
-    if st.button("🔄 Reload Agents"):
-        st.cache_resource.clear()
-        st.rerun()
-
-    if st.button("🗑️ Clear Chat"):
-        st.session_state.messages = []
-        st.rerun()
-
-    st.divider()
-    st.caption("**Active Agents**")
-    st.caption("🔍 Research • 💻 Code • 📊 Data Analysis • 🛠️ SQL/Software")
-    st.caption("🛑 Input Guard • 🛑 Output Guard")
-
+# Custom CSS
+st.markdown("""
+<style>
+.stChatMessage { border-radius: 10px; padding: 10px; }
+.metric-card { background: #f0f2f6; padding: 15px; border-radius: 8px; }
+</style>
+""", unsafe_allow_html=True)
 
 @st.cache_resource
 def get_orchestrator():
     return Orchestrator()
 
-
-orchestrator = get_orchestrator()
+orch = get_orchestrator()
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Sidebar
+with st.sidebar:
+    st.title("⚙️ Control Panel")
+
+    stats = orch.get_stats()
+    st.metric("🧠 Memory Messages", stats["memory"]["total_messages"])
+    st.metric("🤖 LLM Mode", stats["llm_mode"])
+
+    st.divider()
+
+    if st.button("🗑️ Clear Memory", type="secondary", use_container_width=True):
+        orch.reset()
+        st.session_state.messages = []
+        st.rerun()
+
+    if st.button("💾 Download Chat", use_container_width=True):
+        chat_data = json.dumps(st.session_state.messages, indent=2)
+        st.download_button(
+            label="⬇️ Download JSON",
+            data=chat_data,
+            file_name="chat_history.json",
+            mime="application/json",
+            use_container_width=True
+        )
+
+    st.divider()
+    st.caption("Available Intents:")
+    for intent in stats["available_intents"]:
+        st.code(intent, language="text")
+
+# Header
+st.title("🚀 AI Agent System")
+st.caption("Modular Architecture • Auto Routing • Memory Persistence • Real LLM Ready")
+
+# Chat
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
-        if msg["role"] == "assistant" and msg.get("agent_label"):
-            st.caption(msg["agent_label"])
         st.write(msg["content"])
+        if "meta" in msg:
+            with st.expander("🔍 Debug Info"):
+                st.json(msg["meta"])
 
 if prompt := st.chat_input("Ask anything..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -55,20 +74,25 @@ if prompt := st.chat_input("Ask anything..."):
         st.write(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("🤔 Routing to the right agent..."):
-            result = orchestrator.handle(prompt)
+        with st.spinner("🤔 Thinking..."):
+            result = orch.run(prompt)
 
-        st.caption(result["agent_label"])
-        st.write(result["content"])
+        st.write(result["response"])
 
-        usage = result.get("usage")
-        if usage and usage.get("total_tokens"):
-            st.caption(f"🔢 Tokens — in: {usage['input_tokens']} • out: {usage['output_tokens']} • total: {usage['total_tokens']}")
+        meta = {
+            "agent": result["agent"],
+            "intent": result["intent"],
+            "confidence": f"{result['confidence']:.0%}",
+            "latency": f"{result['latency_ms']}ms"
+        }
 
         st.session_state.messages.append({
             "role": "assistant",
-            "content": result["content"],
-            "agent_label": result["agent_label"],
+            "content": result["response"],
+            "meta": meta
         })
 
-st.info("💡 Multi-Agent System: Input Security → Smart Routing → Worker Agent → Output Security")
+        with st.expander("🔍 Debug Info"):
+            st.json(meta)
+            st.caption("System Prompt:")
+            st.code(result["system_prompt"])
